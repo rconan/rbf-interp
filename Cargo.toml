@@ -11,4 +11,4 @@ readme = "README.md"
 description = "An implementation of Radial Basis Function multidimensional interpolation"
 
 [dependencies]
-nalgebra = "0.18"
+nalgebra = "0.26.1"

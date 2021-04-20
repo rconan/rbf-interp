@@ -58,6 +58,25 @@ impl Scatter {
         });
         &self.deltas * basis
     }
+    pub fn eval2(&self, coords_array: &[[f64;3]]) -> Vec<f64> {
+        let n = self.centers.len();
+        let basis = DMatrix::from_fn(self.deltas.ncols(), coords_array.len(), |row, c| {
+            if row < n {
+                // component from basis functions
+                let coords = DVector::from_column_slice(&coords_array[c]);
+                self.basis.eval((&coords - &self.centers[row]).norm())
+            } else if row == n {
+                // constant component
+                1.0
+            } else {
+                // linear component
+                let coords = DVector::from_column_slice(&coords_array[c]);
+                coords[row - n - 1]
+            }
+        });
+        //println!("basis shape: {:?}",basis.shape());
+        (&self.deltas * basis).as_slice().to_vec()
+    }
 
     // The order for the polynomial part, meaning terms up to (order - 1) are included.
     // This usage is consistent with Wilna du Toit's masters thesis "Radial Basis
@@ -115,13 +134,18 @@ impl Scatter {
                 0.0
             }
         });
+        println!("RBF: M shape {:?}", mat.shape());
         // inv is an n' x n' matrix.
         let svd = SVD::new(mat, true, true);
         // Use pseudo-inverse here to get "least squares fit" when there's
         // no unique result (for example, when dimensionality is too small).
-        let inv = svd.pseudo_inverse(1e-6).expect("error inverting matrix");
+        //let inv = svd.pseudo_inverse(1e-6).expect("error inverting matrix");
         // Again, this transpose feels like I don't know what I'm doing.
-        let mut deltas = (inv * vals).transpose();
+        //let mut deltas = (inv * vals).transpose();
+        let mut deltas = svd
+            .solve(&vals, 1e-6)
+            .expect("error inverting matrix")
+            .transpose();
         if order == 2 {
             let m = centers[0].len();
             for i in 0..deltas.nrows() {
@@ -129,6 +153,7 @@ impl Scatter {
                 deltas[(i, n)] -= offset;
             }
         }
+        println!("RBF: deltas shape {:?}", deltas.shape());
         Scatter {
             basis,
             centers,
