@@ -58,7 +58,7 @@ impl Scatter {
         });
         &self.deltas * basis
     }
-    pub fn eval2(&self, coords_array: &[[f64;3]]) -> Vec<f64> {
+    pub fn eval2(&self, coords_array: &[[f64; 3]]) -> Vec<f64> {
         let n = self.centers.len();
         let basis = DMatrix::from_fn(self.deltas.ncols(), coords_array.len(), |row, c| {
             if row < n {
@@ -134,7 +134,7 @@ impl Scatter {
                 0.0
             }
         });
-        println!("RBF: M shape {:?}", mat.shape());
+        //println!("RBF: M shape {:?}", mat.shape());
         // inv is an n' x n' matrix.
         let svd = SVD::new(mat, true, true);
         // Use pseudo-inverse here to get "least squares fit" when there's
@@ -153,7 +153,7 @@ impl Scatter {
                 deltas[(i, n)] -= offset;
             }
         }
-        println!("RBF: deltas shape {:?}", deltas.shape());
+        //println!("RBF: deltas shape {:?}", deltas.shape());
         Scatter {
             basis,
             centers,
